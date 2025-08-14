@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Node.js Application (Development)
+  app-dev:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: express-mvc-app-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongo:27017/myapp
+      - PORT=3000
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    restart: unless-stopped
+    command: npm run dev
+
+  # MongoDB Database
+  mongo:
+    image: mongo:6.0
+    container_name: mongodb-dev
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=myapp
+    volumes:
+      - mongodb_data_dev:/data/db
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # MongoDB Express (Web-based MongoDB admin interface)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express-dev
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data_dev:
+
+networks:
+  app-network:
+    driver: bridge
+
